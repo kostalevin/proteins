@@ -1,0 +1,90 @@
+---
+title: "Generating data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# switch off printing messages and warnings
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+# load libraries
+library(reshape2) # for melting data frames
+library(DT) # for printing nice interactive data tables
+```
+
+## Generate data
+
+Simulate 9 angles for 30 random dinucleotids in each of 10 NtC classes.
+```{r}
+# define constants for simulation
+ANGLE_COUNT <- 9 # number of measured angles
+NTC_CLASS_COUNT <- 10 # number of NtC classes (all dinucleotids in one NtC class will have the same angles)
+STEP_IN_CLASS_COUNT <- 30 # number of steps (dinucleotids) in each NtC class
+
+# names of NtC classes and angles
+class_names <- LETTERS[1:NTC_CLASS_COUNT]
+angle_names <- letters[1:ANGLE_COUNT]
+
+# simulate uniformly distributed means for each class and angle
+set.seed(1) # set fix seed so the simulation is the same every time
+means <- runif(n = ANGLE_COUNT*NTC_CLASS_COUNT, min = 0, max = 180)
+
+# put data into matrix, transform it to data frame, name columns and add column with class names
+means <- matrix(data = means, ncol = ANGLE_COUNT, byrow = TRUE)
+means <- data.frame(means)
+colnames(means) <- angle_names
+means$class <- class_names
+
+# simulate white noise (random errors)
+noise <- rnorm(n = ANGLE_COUNT*NTC_CLASS_COUNT*STEP_IN_CLASS_COUNT, mean = 0, sd = 10)
+
+# replicate simulated means for each step in each class and add column with index of step in class
+angles <- do.call('rbind', rep(list(means), STEP_IN_CLASS_COUNT))
+angles$step_in_class_index <- rep(1:STEP_IN_CLASS_COUNT, each = NTC_CLASS_COUNT)
+
+# add noise to means
+angles[,angle_names] <- angles[,angle_names] + noise
+
+# save data
+save(list = 'angles', file = './data/angles.RData') # if we would like to load it later again only to R
+write.table(x = angles, file = './data/angles.csv', row.names = F, sep = ';', dec = '.', quote = F) # as csv
+```
+
+## Print data {.tabset}
+
+### Data table
+Print data as an interactive table with pages, sorting, filters and formatting. We see that the random noise caused that some angles are outside the $[\alpha_1, \alpha_2) = [0°, 180°)$ interval (oh yes, we can use latex :-)).
+```{r}
+# order data by class
+angles <- angles[order(angles$class),]
+
+# print data as nice data table
+# filter on the top, pages with defaultly 10 rows, automatic column width and table caption
+datatable(angles, filter = 'top', options = list(pageLength = 10), 
+          caption = 'Table: Simulated angles') %>% 
+  # round numbers to two digits
+  formatRound(columns = angle_names, digits = 2) %>%
+  # numbers outside (0, 180) range format with red text color in each column with angles
+  formatStyle(columns = angle_names, valueColumns = angle_names, 
+              color = styleInterval(cuts = c(0, 180), values = c("red", "black", "red"))) %>%
+  # in column with angle a add grey bars to background
+  formatStyle(columns = 'a', valueColumns = 'a', background  = styleColorBar(c(0, 180), color = "lightgrey"))
+```
+
+
+### Classic summary statistics
+
+Print summary statistics.
+```{r}
+s <- summary(angles)
+knitr::kable(s)
+```
+
+### Better summary statistics
+
+Print summary statistics as nice table.
+```{r}
+library(papeR)
+s <- summarize(angles)
+knitr::kable(s)
+```

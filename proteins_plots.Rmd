@@ -1,0 +1,106 @@
+---
+title: "Plots with angles"
+output:
+  html_document:
+    df_print: paged
+---
+Let us simulate data with angles and plot them.
+
+Load libraries.
+```{r message=FALSE, warning=FALSE}
+library(reshape2)
+library(ggplot2)
+library(plotly)
+library(DT)
+# library(devtools)
+# install_github("walkerke/bsselectR")
+library(bsselectR)
+library(svglite)
+```
+
+
+Simulate data with angles and print them.
+```{r message=FALSE, warning=FALSE}
+# define constants for simulation
+ANGLE_COUNT <- 9 # number of measured angles
+NTC_CLASS_COUNT <- 10 # number of NtC classes (all dinucleotids in one NtC class will have the same angles)
+STEP_IN_CLASS_COUNT <- 30 # number of steps (dinucleotids) in each NtC class
+
+# names of NtC classes and angles
+class_names <- LETTERS[1:NTC_CLASS_COUNT]
+angle_names <- letters[1:ANGLE_COUNT]
+
+# simulate uniformly distributed mean for each class and angle
+set.seed(1) # set fix seed so the simulation is the same every time
+means <- runif(n = ANGLE_COUNT*NTC_CLASS_COUNT, min = 0, max = 180)
+means <- matrix(data = means, ncol = ANGLE_COUNT, byrow = TRUE)
+means <- data.frame(means)
+colnames(means) <- angle_names
+means$class <- class_names
+
+# simulate white noise (random errors)
+noise <- rnorm(n = ANGLE_COUNT*NTC_CLASS_COUNT*STEP_IN_CLASS_COUNT, mean = 0, sd = 10)
+
+# put simulated means to data frame and replicate them
+angles <- data.frame(means)
+angles <- do.call('rbind', rep(list(angles), STEP_IN_CLASS_COUNT))
+angles$observation <- rep(1:STEP_IN_CLASS_COUNT, each = NTC_CLASS_COUNT)
+
+# add noise to means and remove angles outside the interval
+angles[,angle_names] <- angles[,angle_names] + noise
+# angles[angles[,angle_names] < 0 | angles[,angle_names] > 180, angle_names] <- NA
+```
+
+Print data as table.
+```{r message=FALSE, warning=FALSE}
+# print as datatable (nice table with pages, sorting, filters and formatting)
+angles <- angles[order(angles$class),]
+datatable(angles, filter = 'top', options = list(pageLength = 10), caption = 'Simulated angles.') %>% 
+  formatRound(columns = angle_names, digits = 2) %>%
+  formatStyle(columns = angle_names, valueColumns = angle_names, color = styleInterval(cuts = c(0, 180), values = c("red", "black", "red"))) %>%
+  formatStyle(columns = angle_names, valueColumns = angle_names, background  = styleColorBar(c(0, 180), color = "lightgrey"))
+```
+
+Plot data. Use ggplot library for nice plots and ggplotly to make them interactive.
+```{r message=FALSE, warning=FALSE}
+# melt data for plotting to different structure
+angles_melted <- melt(angles, measure.vars = angle_names, variable.name = 'angle_name', value.name = 'angle')
+
+# plot data
+for(class in class_names) {
+  # subset data for given class
+  angles_plot <- angles_melted[angles_melted$class == class, ]
+  
+  # create and save static plots
+  density_plot_static <- ggplot(angles_plot, mapping = aes(x = angle, colour = angle_name)) + 
+                          geom_density(adjust=2) + ggtitle(paste('NtC class:', class))
+  path <- paste0("./plots_static/densities/Class ", class, ".svg")
+  ggsave(filename = path, plot = density_plot_static, units  = 'cm', width = 15, height = 10, dpi = 300)
+  
+  # create and save interactive plots
+  density_plot_interactive <- ggplotly(density_plot_static)
+  path <- paste0("./plots_interactive/densities/Class ", class, ".html")
+  path <- file.path(normalizePath(dirname(path)),basename(path))
+  saveWidget(widget = density_plot_interactive, selfcontained = F, libdir = './plotly_libraries', file = path)
+}
+
+```
+
+View interactive plots.
+```{r}
+plot_paths <- list.files(path = "./plots_interactive/densities/", pattern = 'Class ', full.names = TRUE)
+plot_files <- list.files(path = "./plots_interactive/densities/", pattern = 'Class ', full.names = FALSE)
+plot_names <- substr(x = plot_files, start =  1, stop = nchar(plot_files)-5)
+names(plot_paths) <- plot_names
+bsselect(vector = plot_paths, type = "iframe", selected = "Class A", live_search = TRUE, show_tick = TRUE)
+```
+
+View static plots.
+```{r}
+plot_paths <- list.files(path = "./plots_static/densities/", pattern = '\\.svg', full.names = TRUE)
+plot_files <- list.files(path = "./plots_static/densities/", pattern = '\\.svg', full.names = FALSE)
+plot_names <- substr(x = plot_files, start =  1, stop = nchar(plot_files)-4)
+names(plot_paths) <- plot_names
+bsselect(vector = plot_paths, type = "img", selected = "Class A", live_search = TRUE, show_tick = TRUE)
+```
+

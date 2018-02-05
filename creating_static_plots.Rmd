@@ -1,0 +1,54 @@
+---
+title: "Plots - static"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# switch off printing messages and warnings
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+# load libraries
+library(reshape2) # for melting data frames
+library(ggplot2) # for creating nice plots
+# library(devtools) # for installing packages from github
+# install_github("walkerke/bsselectR")
+library(bsselectR) # for creating menu where we can choose different plots
+library(svglite) # for saving plots in svg format (vector graphics - quality is independent on zoom)
+```
+
+
+## Static plots
+Plot data. Use ggplot library for nice static plots.
+```{r}
+# load data
+angles <- read.table(file = './data/angles.csv', sep = ';', dec = '.', header = T)
+class_names <- LETTERS[1:10]
+angle_names <- letters[1:9]
+
+# for plotting melt data to different structure
+angles_melted <- melt(angles, measure.vars = angle_names, variable.name = 'angle_name', value.name = 'angle')
+
+# plot data
+plots_subdirectory <- './plots_static/densities'
+dir.create(file.path(mainDir, subDir))
+for(class in class_names) {
+  # subset data for given class
+  angles_plot <- angles_melted[angles_melted$class == class, ]
+  
+  # create and save static plots
+  density_plot_static <- ggplot(angles_plot, mapping = aes(x = angle, colour = angle_name)) + 
+                          geom_density(adjust=2) + ggtitle(paste('NtC class:', class))
+  path <- paste0("./plots_static/densities/Class ", class, ".svg")
+  ggsave(filename = path, plot = density_plot_static, units  = 'cm', width = 15, height = 10, dpi = 300)
+}
+```
+
+View static plots.
+```{r}
+plot_paths <- list.files(path = "./plots_static/densities/", pattern = '\\.svg', full.names = TRUE)
+plot_files <- list.files(path = "./plots_static/densities/", pattern = '\\.svg', full.names = FALSE)
+plot_names <- substr(x = plot_files, start =  1, stop = nchar(plot_files)-4)
+names(plot_paths) <- plot_names
+bsselect(vector = plot_paths, type = "img", selected = "Class A", live_search = TRUE, show_tick = TRUE)
+```
+
