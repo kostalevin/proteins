@@ -1,0 +1,127 @@
+---
+title: "Plots"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# switch off printing messages and warnings
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+# load libraries
+library(reshape2) # for melting data frames
+library(ggplot2) # for creating nice plots
+library(plotly) # for making static ggplots interactive
+library(htmlwidgets) # for saving interactive plots
+library(svglite) # for saving plots in svg format (vector graphics - quality is independent on zoom)
+# library(devtools) # for installing packages from github
+# install_github("walkerke/bsselectR")
+library(bsselectR) # for creating menu where we can choose different plots
+```
+
+
+# Create plots
+
+Load data and create plots using `ggplot2` library for nice static plots and make them interactive
+using `plotly` library.
+
+```{r}
+# load data
+angles <- read.table(file = './data/angles.csv', sep = ';', dec = '.', header = T)
+class_names <- unique(angles$class)
+angle_names <- unique(angles$angle_name)
+
+# create subdirs in working directory
+dir.create(paste0(getwd(), '/plots')) 
+
+# create and save plots for each NtC class
+for(class in class_names) {
+  # subset data for given class
+  angles_plot <- angles[angles$class == class, ]
+  
+  # static densities
+  density_plot_static <- ggplot(angles_plot, mapping = aes(x = angle, colour = angle_name)) + 
+                          geom_density(adjust=2) + ggtitle(paste('NtC class:', class))
+  path <- paste0("./plots/Density static [Class ", class, "].svg")
+  ggsave(filename = path, plot = density_plot_static, 
+         units  = 'cm', width = 15, height = 10, dpi = 300)
+  
+  # static histograms
+  histogram_plot_static <- ggplot(angles_plot, mapping = aes(x = angle, fill = angle_name)) + 
+                            geom_histogram(position = 'identity', alpha=0.2) + 
+                            ggtitle(paste('NtC class:', class))
+  path <- paste0("./plots/Histogram static [Class ", class, "].svg")
+  ggsave(filename = path, plot = histogram_plot_static, 
+         units  = 'cm', width = 15, height = 10, dpi = 300)
+  
+  # create interactive plots from static ggplots
+  density_plot_interactive <- ggplotly(density_plot_static)
+  histogram_plot_interactive <- ggplotly(histogram_plot_static)
+  
+  # save interactive density plots
+  path <- paste0("./plots/Density interactive [Class ", class, "].html")
+  # saveWidget function needs absolute path
+  path <- file.path(normalizePath(dirname(path)),basename(path))  
+  saveWidget(widget = density_plot_interactive, selfcontained = F, 
+             libdir = './plotly_libraries', file = path)
+  
+  # save interactive histogram plots
+  path <- paste0("./plots/Histogram interactive [Class ", class, "].html")
+  path <- file.path(normalizePath(dirname(path)),basename(path))
+  saveWidget(widget = histogram_plot_interactive, selfcontained = F, 
+             libdir = './plotly_libraries', file = path)
+}
+```
+
+
+# View plots {.tabset}
+View created plots.
+
+## View static histograms
+
+Static histograms are not too clear.
+
+```{r}
+view_plots <- function(path_to_plots = './plots', plot_name_filter, type = 'img') {
+  # Select all plots from folder on 'path_to_plots' that have 'plot_name_filter'
+  # in the file name and view them with select option.
+  # The names of the plots will be extracted as part of the file names between '[' and ']'.
+  # If it is a static plot, type = 'img', if interactive type = 'iframe'.
+  
+  plot_paths <- list.files(path = path_to_plots, pattern = plot_name_filter, full.names = TRUE)
+  plot_names <- substr(x = plot_paths, 
+                       start = regexpr(text = plot_paths, pattern = "\\[")+1,
+                       stop = regexpr(text = plot_paths, pattern = "\\]")-1)
+  names(plot_paths) <- plot_names
+  bsselect(vector = plot_paths, type = type, live_search = TRUE, show_tick = TRUE)
+}
+
+view_plots(plot_name_filter = 'Histogram static')
+```
+
+
+## View static densities
+
+Static densities are a bit better.
+
+```{r}
+view_plots(plot_name_filter = 'Density static')
+```
+
+
+## View interactive histograms
+
+Click or double click on any line in the legend. Select any part of the plot. 
+Double click on the plot. Click on any button on the top.
+
+```{r}
+view_plots(plot_name_filter = 'Histogram interactive', type = 'iframe')
+```
+
+
+## View static densities
+
+Hmm...
+
+```{r}
+view_plots(plot_name_filter = 'Density interactive', type = 'iframe')
+```

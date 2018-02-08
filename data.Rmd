@@ -1,0 +1,119 @@
+---
+title: "Data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# switch off printing messages and warnings
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+
+# load libraries
+library(reshape2) # for melting data frames
+library(DT) # for printing nice interactive data tables
+```
+
+
+
+# Generate data
+
+Simulate 9 angles for 30 random dinucleotids in each of 10 NtC classes.
+```{r}
+# define constants for simulation
+ANGLE_COUNT <- 9 # number of measured angles
+NTC_CLASS_COUNT <- 10 # number of NtC classes
+STEP_IN_CLASS_COUNT <- 100 # number of steps in each NtC class
+
+# names of NtC classes and angles
+class_names <- paste0('C', 1:NTC_CLASS_COUNT)
+angle_names <-  paste0('A', 1:ANGLE_COUNT)
+
+# simulate uniformly distributed angles for each class and angle name
+set.seed(1) # set fix seed so the simulation is the same every time
+angles <- data.frame(class = rep(class_names, each = ANGLE_COUNT),
+                    angle_name = rep(angle_names, times = NTC_CLASS_COUNT),
+                    angle = runif(n = ANGLE_COUNT*NTC_CLASS_COUNT, min = 0, max = 180))
+
+# replicate data several times so we have more steps in each class
+angles <- angles[rep(1:nrow(angles), times = STEP_IN_CLASS_COUNT),]
+angles$step_index <- rep(1:(STEP_IN_CLASS_COUNT), each = ANGLE_COUNT*NTC_CLASS_COUNT)
+
+# add random noise to angles so it is not the same in each step
+noise <- rnorm(n = ANGLE_COUNT*NTC_CLASS_COUNT*STEP_IN_CLASS_COUNT, mean = 0, sd = 10)
+angles$angle <- angles$angle + noise
+
+# save data
+dir.create(paste0(getwd(), '/data')) # create subdir for data in working directory
+save(list = 'angles', file = './data/angles.RData') # for later loading to R
+write.table(x = angles, file = './data/angles.csv', row.names = F, 
+            sep = ';', dec = '.', quote = F) # as csv
+```
+
+
+
+# Print data {.tabset}
+
+## Data table
+
+Print data as an interactive table with pages, sorting, filters and formatting. We see that the random noise caused that some angles are outside the $[\alpha_1, \alpha_2) = [0°, 180°)$ interval.
+
+```{r}
+# print data as nice data table
+# filter on the top, pages with defaultly 10 rows, automatic column width and table caption
+datatable(angles, filter = 'top', rownames = FALSE, 
+          options = list(pageLength = 10, autoWidth = TRUE),
+          colnames = c('Class', 'Angle name', 'Angle', 'Step index'),
+          caption = 'Table: Simulated angles') %>% 
+  # round numbers to two digits
+  formatRound(columns = 'angle', digits = 2) %>%
+  # numbers outside (0, 180) range format with red text color in each column with angles
+  formatStyle(columns = 'angle', valueColumns = 'angle', 
+              color = styleInterval(cuts = c(0, 180), values = c("red", "black", "red"))) %>%
+  # in column with angle a add grey bars to background
+  formatStyle(columns = 'angle', valueColumns = 'angle', 
+              background  = styleColorBar(c(0, 180), color = "lightgrey"))
+```
+
+
+## Transformed data table
+
+Transform table so there are angles in columns and print it.
+
+```{r}
+# transform data frame so we have separate column for each angle
+angles <- dcast(data = angles, formula = class + step_index ~ angle_names, value.var = 'angle')
+
+# print data as nice data table
+# filter on the top, pages with defaultly 10 rows, automatic column width and table caption
+datatable(angles, filter = 'top', rownames = FALSE, 
+          options = list(pageLength = 10, autoWidth = TRUE, scrollX = TRUE), 
+          caption = 'Table: Simulated angles') %>% 
+  # round numbers to two digits
+  formatRound(columns = angle_names, digits = 2) %>%
+  # numbers outside (0, 180) range format with red text color in each column with angles
+  formatStyle(columns = angle_names, valueColumns = angle_names, 
+              color = styleInterval(cuts = c(0, 180), values = c("red", "black", "red"))) %>%
+  # in column with angle A1 add grey bars to background
+  formatStyle(columns = 'A1', valueColumns = 'A1', 
+              background  = styleColorBar(c(0, 180), color = "lightgrey"))
+```
+
+
+## Classic summary statistics
+
+Print summary statistics for the first five columns.
+
+```{r}
+s <- summary(angles[angles$class=='C1',])
+knitr::kable(s)
+```
+
+
+## Better summary statistics
+
+Print summary statistics for the first class as nice table.
+
+```{r}
+library(papeR)
+s <- summarize(angles[angles$class=='C1',])
+knitr::kable(s)
+```

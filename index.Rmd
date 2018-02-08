@@ -1,17 +1,48 @@
 ---
 title: "Introduction"
-output: 
-  html_document: 
-    toc: yes
+output:  html_document
+
 ---
 
 This is a website for plotting some randomly generated data. It was created using R Markdown (in RStudio) - a user friendly and time efficient way how to create a nice website within a few lines of R code.
 
-The following part is the default template for R Markdown file. It can be deleted or changed.
+# Languages
+It can generate a website from text (including LaTeX) and R 
+(or Python, Bash etc. if necessary) code outputs.
 
-## R Markdown 
+## R
+This is an R chunk and its output.
+```{r}
+fruits <- c('mango', 'orange', 'apple')
+for(fruit in fruits) {
+  print(fruit)
+}
+```
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## Python
+This is a Python chunk and its output.
+```{python}
+fruits = ['mango', 'orange', 'apple']
+for fruit in fruits:
+  print(fruit)
+```
+
+<!-- ### Bash -->
+<!-- This is a bash chunk. -->
+<!-- ```{bash} -->
+<!-- echo hello world -->
+<!-- ``` -->
+
+
+## LaTeX
+
+This is an equation in LaTeX:
+
+$$ e^{i \pi} + 1 = 0 $$
+
+# R Markdown 
+
+Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 

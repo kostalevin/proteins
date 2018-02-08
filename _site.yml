@@ -2,22 +2,20 @@ name: proteins-website
 navbar:
   title: Proteins Website
   left:
-  - text: Generating data
-    href: generating_data.html
+  - text: Data
+    href: data.html
   - text: Plots
-    menu: 
-    - text: Plots
-    - text: Creating static plots
-      href: creating_static_plots.html
-    - text: Creating interactive plots
-      href: creating_interactive_plots.html
-    - text: Plots as dashboard
-    - text: Creating interactive dashboards
-      href: creating_interactive_dashboards.html
+    href: plots.html
 output_dir: _site
 output:
   html_document:
+    theme: flatly
+    highlight: zenburn
+    toc: yes
+    toc_float:
+      collapsed: no
+    number_sections: yes
+    code_folding: show
     lib_dir: site_libs
     self_contained: no
-    theme: cosmo
-    highlight: textmate
+

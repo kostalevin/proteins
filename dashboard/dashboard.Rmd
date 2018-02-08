@@ -1,0 +1,120 @@
+---
+title: "Dashboard"
+output:
+  flexdashboard::flex_dashboard:
+    # vertical_layout: scroll
+    vertical_layout: fill
+    # orientation: rows
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(DT)
+library(reshape2)
+library(ggplot2)
+library(plotly)
+source('../plots_library.R')
+```
+
+Introduction {data-orientation=columns}
+=============================================================================
+
+Column {data-width=600}
+-----------------------------------------------------------------------------
+
+### Flex dashboards for R
+
+This is a dashboard created using R Markdown and `flexdashboard` library.
+For more information see the [official website](http://rmarkdown.rstudio.com/flexdashboard/index.html).
+
+Column {data-width=400}
+-----------------------------------------------------------------------------
+
+### Data
+
+Some random stuff.
+
+```{r}
+print(paste('Hello number', 1:22))
+```
+
+
+### Equations
+
+This is an equation in LaTeX:
+
+$$ e^{i \pi} + 1 = 0 $$
+
+
+Dashboard {data-orientation=rows}
+=============================================================================
+This is a dashboard analyzing generated data with angles.
+
+Row {.tabset}
+-----------------------------------------------------------------------------
+
+### Data 
+```{r}
+# load data
+angles <- read.table(file = '../data/angles.csv', sep = ';', dec = '.', header = T, stringsAsFactors = F)
+class_names <- unique(angles$class)
+angle_names <- unique(angles$angle_name)
+
+# print data
+datatable(angles, filter = 'top', options = list(paging = FALSE)) %>%
+  formatRound(columns = 'angle', digits = 2)
+```
+
+### Transformed data
+```{r}
+# transform data frame so we have separate column for each angle
+angles_transformed <- dcast(data = angles, formula = class + step_index ~ angle_names, value.var = 'angle')
+datatable(angles_transformed, filter = 'top', options = list(paging = FALSE)) %>%
+  formatRound(columns = angle_names, digits = 2)
+```
+
+
+Row {.tabset .tabset-fade}
+-----------------------------------------------------------------------------
+
+### Densities
+```{r}
+# plot data
+ggplotly(ggplot(angles[angles$class == 'C1',], mapping = aes(x = angle, colour = angle_name)) + geom_density(adjust=2) + ggtitle('Class C1'))
+```
+
+> This is a note.
+
+### Boxplots
+```{r}
+ggplotly(ggplot(angles, mapping = aes(y = angle, x = class, col = angle_name)) + geom_boxplot())
+```
+
+
+Storyboard {.storyboard}
+=============================================================================
+
+### Transformed data
+```{r}
+datatable(angles_transformed, filter = 'top', options = list(paging = FALSE)) %>%
+  formatRound(columns = angle_names, digits = 2)
+```
+
+
+### Boxplots
+
+```{r}
+ggplotly(ggplot(angles, mapping = aes(y = angle, x = angle_name, col = class)) + geom_boxplot())
+```
+
+
+### Histograms
+
+```{r}
+view_plots(path_to_plots = '../plots', plot_name_filter = 'Histogram interactive', type = 'iframe')
+```
+
+***
+
+Hatla matla.
