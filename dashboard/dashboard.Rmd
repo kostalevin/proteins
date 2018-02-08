@@ -14,6 +14,7 @@ library(DT)
 library(reshape2)
 library(ggplot2)
 library(plotly)
+library(tsne)
 source('../plots_library.R')
 ```
 
@@ -100,4 +101,34 @@ p <- ggplot(angles, mapping = aes(y = angle, x = angle_name, col = class)) +
 ggplotly(p)
 ```
 
-> These are boxplots.
+> These are violin plots with medians.
+
+
+### t-SNE algorithm
+
+This is an application of t-SNE algorithm on the angles data. 
+The data are well clustered and you can identify the steps.
+
+```{r}
+angles_matrix <- as.matrix(angles_transformed[3:ncol(angles_transformed)])
+
+# identify clusters and add informations about them to the result 
+# clusters <- tsne(angles_matrix, max_iter = 200)
+# clusters_info <- as.data.frame(clusters)
+# colnames(clusters_info) <- c('x_tsne_coordinate', 'y_tsne_coordinate')
+# clusters_info <- cbind(angles_transformed, clusters_info)
+
+# save the result of the algorithm so it is not recalculated every time
+# save(file = '../data/clusters.RData', list = c('clusters', 'clusters_info'))
+
+# load calculated clusters
+load('../data/clusters.RData')
+
+p <- ggplot(clusters_info, 
+            aes(x = x_tsne_coordinate, y_tsne_coordinate,  
+                label1 = step_index, label2 = A1, label3 = A2, label4 = A3,
+                label5 = A4, label6 = A5, label7 = A6, label8 = A7, label9 = A8, label10 = A9)) + 
+  geom_point(aes(colour = class))
+ggplotly(p)
+```
+
