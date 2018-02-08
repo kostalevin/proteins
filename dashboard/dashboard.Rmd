@@ -66,6 +66,8 @@ datatable(angles, filter = 'top', options = list(paging = FALSE)) %>%
   formatRound(columns = 'angle', digits = 2)
 ```
 
+> This are our data in the original format.
+
 ### Transformed data
 ```{r}
 # transform data frame so we have separate column for each angle
@@ -74,9 +76,7 @@ datatable(angles_transformed, filter = 'top', options = list(paging = FALSE)) %>
   formatRound(columns = angle_names, digits = 2)
 ```
 
-
-Row {.tabset .tabset-fade}
------------------------------------------------------------------------------
+> This are transformed data with angles in columns.
 
 ### Densities
 ```{r}
@@ -84,37 +84,20 @@ Row {.tabset .tabset-fade}
 ggplotly(ggplot(angles[angles$class == 'C1',], mapping = aes(x = angle, colour = angle_name)) + geom_density(adjust=2) + ggtitle('Class C1'))
 ```
 
-> This is a note.
+> These are densities for class C1.
 
 ### Boxplots
-```{r}
-ggplotly(ggplot(angles, mapping = aes(y = angle, x = class, col = angle_name)) + geom_boxplot())
-```
-
-
-Storyboard {.storyboard}
-=============================================================================
-
-### Transformed data
-```{r}
-datatable(angles_transformed, filter = 'top', options = list(paging = FALSE)) %>%
-  formatRound(columns = angle_names, digits = 2)
-```
-
-
-### Boxplots
-
 ```{r}
 ggplotly(ggplot(angles, mapping = aes(y = angle, x = angle_name, col = class)) + geom_boxplot())
 ```
 
+> These are boxplots.
 
-### Histograms
-
+### Violin plots
 ```{r}
-view_plots(path_to_plots = '../plots', plot_name_filter = 'Histogram interactive', type = 'iframe')
+p <- ggplot(angles, mapping = aes(y = angle, x = angle_name, col = class)) + 
+  geom_violin() + stat_summary(fun.y = "median", geom = "point")
+ggplotly(p)
 ```
 
-***
-
-Hatla matla.
+> These are boxplots.
