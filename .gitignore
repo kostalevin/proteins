@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.backup
+_site
+plots
+data
+dashboard/dashboard.html
