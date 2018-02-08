@@ -3,7 +3,5 @@
 .RData
 .Ruserdata
 .backup
-_site
 plots
-data
-dashboard/dashboard.html
+_site
