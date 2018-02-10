@@ -1,5 +1,5 @@
 ---
-title: "Dashboard"
+title: "Proteins"
 output:
   flexdashboard::flex_dashboard:
     # vertical_layout: scroll
@@ -48,9 +48,10 @@ This is an equation in LaTeX:
 $$ e^{i \pi} + 1 = 0 $$
 
 
-Dashboard {data-orientation=rows}
+Data {data-orientation=rows}
 =============================================================================
-This is a dashboard analyzing generated data with angles.
+
+Data tables with angles data.
 
 Row {.tabset}
 -----------------------------------------------------------------------------
@@ -79,13 +80,27 @@ datatable(angles_transformed, filter = 'top', options = list(paging = FALSE)) %>
 
 > This are transformed data with angles in columns.
 
+Plots 
+=============================================================================
+
+Plots with angles data.
+
+Row {.tabset}
+-----------------------------------------------------------------------------
+
 ### Densities
 ```{r}
-# plot data
-ggplotly(ggplot(angles[angles$class == 'C1',], mapping = aes(x = angle, colour = angle_name)) + geom_density(adjust=2) + ggtitle('Class C1'))
+view_plots('../plots', 'Density interactive', 'iframe')
 ```
 
-> These are densities for class C1.
+> These are the interactive density plots which we generated before.
+
+### Histogram
+```{r}
+ggplotly(ggplot(angles[angles$class == 'C1',], mapping = aes(x = angle, colour = angle_name)) + geom_histogram(position = 'identity', alpha = 0.2) + ggtitle('Class C1'))
+```
+
+> These are histograms for class C1.
 
 ### Boxplots
 ```{r}
@@ -97,17 +112,24 @@ ggplotly(ggplot(angles, mapping = aes(y = angle, x = angle_name, col = class)) +
 ### Violin plots
 ```{r}
 p <- ggplot(angles, mapping = aes(y = angle, x = angle_name, col = class)) + 
-  geom_violin() + stat_summary(fun.y = "median", geom = "point")
+  geom_violin(position=position_dodge(0)) + 
+  stat_summary(fun.y = "median", geom = "point")
+  # stat_summary(fun.data=mean_sdl, mult=5, geom="pointrange")
 ggplotly(p)
 ```
 
 > These are violin plots with medians.
 
 
-### t-SNE algorithm
+t-SNE 
+=============================================================================
 
-This is an application of t-SNE algorithm on the angles data. 
-The data are well clustered and you can identify the steps.
+This is the outcome from an application of t-SNE algorithm on the angles data. 
+
+Row 
+-----------------------------------------------------------------------------
+
+### t-SNE algorithm
 
 ```{r}
 angles_matrix <- as.matrix(angles_transformed[3:ncol(angles_transformed)])

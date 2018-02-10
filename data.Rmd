@@ -103,8 +103,7 @@ datatable(angles, filter = 'top', rownames = FALSE,
 Print summary statistics for the first five columns.
 
 ```{r}
-s <- summary(angles[angles$class=='C1',])
-knitr::kable(s)
+summary(angles[angles$class=='C1',])
 ```
 
 

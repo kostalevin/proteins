@@ -21,8 +21,8 @@ library(bsselectR) # for creating menu where we can choose different plots
 
 # Create plots
 
-Load data and create plots using `ggplot2` library for nice static plots and make them interactive
-using `plotly` library.
+Load data and create plots using [ggplot2 library](http://ggplot2.tidyverse.org/index.html) for nice static plots and make them interactive
+using [plotly library](https://plot.ly/).
 
 ```{r}
 # load data
@@ -118,7 +118,7 @@ view_plots(plot_name_filter = 'Histogram interactive', type = 'iframe')
 ```
 
 
-## View static densities
+## View interactive densities
 
 Hmm...
 
