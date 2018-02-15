@@ -1,24 +1,24 @@
+# Functions for loading and plotting cluster points.
+
 # Setup -------------------------------------------------------------------
 
 # libraries for manipulating data
-library(readr) # reading data
-library(stringr) # manipulating strings
-library(tidyr) # tidying data
-library(dplyr) # data frames manipulation
+library(readr)
+library(stringr)
+library(tidyr)
+library(dplyr)
 
 # libraries for plotting
-library(plotly) # interactive plots
+library(plotly)
 
-# setwd('/home/paulina/Documents/Jenicek/')
-# setwd('c:/Users/cen85690/Documents/projects/proteins/')
-setwd('c:/Users/Jan/projects/proteins/')
 options(stringsAsFactors = F)
 
-
+# Data function -----------------------------------------------------------
+load_data <- function(file_path) {
 # Load data ---------------------------------------------------------------
 
 # read data with fixed columns width
-filename <- 'AA03_nearest39random.pdb'
+# filename <- 'AA03_nearest39random.pdb'
 columns <- fwf_cols(
   record_type = c(1, 4), atom_serial_number = c(7, 11), 
   atom_name = c(13, 16), alternate_location_indiciator = c(17, 17), 
@@ -28,10 +28,10 @@ columns <- fwf_cols(
   x = c(31, 38),  y = c(39, 46), z = c(47, 54), 
   occupancy = c(55, 60), temperature_factor = c(61, 66), 
   segment_identifier = c(73, 76), element_symbol = c(77, 78))
-data <- read_fwf(filename, columns)
+data <- read_fwf(file_path, columns)
 
 # add column with model number
-fileLines <- readLines(filename)
+fileLines <- readLines(file_path)
 model_numbers <- str_match(fileLines, 'MODEL[ ]+([0-9]+)') # extract model number
 data$model_number <- model_numbers[,2] 
 data <- fill(data, model_number, .direction = 'down') # fill down model number
@@ -59,8 +59,6 @@ data <- data %>%
 # data %>% select(atom_name, model_number, nucleotid_number, is_backbone) %>% print(n=50)
 # data %>% group_by(nucleotid_number, atom_name) %>% summarise(n()) %>% print(n=90)
 
-
-
 # Define groups for colors --------------------------------------------------
 
 # define color mapping for backbone atoms
@@ -82,16 +80,18 @@ data <- data %>% mutate(
 # sort data again
 data <- data %>% arrange(model_number, nucleotid_number, atom_serial_number)
 
+return(data)
 
-# Plots -------------------------------------------------------------------
+}
+
+
+
+# Plots function -------------------------------------------------------------
+plot_density <- function(point_size = 8, opacity = 0.1, data) {
 
 # set colors for each group (i-th group will have i-th color)
 groups <- sort(unique(data$group))
 groups_colors <- RColorBrewer::brewer.pal(length(groups), name = "Set3")
-
-# set point size and opacity so the plot looks like smoothed density plot
-point_size <- 8
-opacity <- 0.1
 
 # i-th group (alphabetically sorted) will have i-th color from groups_colors
 p <- plot_ly(data, x = ~x, y = ~y, z = ~z, 
@@ -105,15 +105,7 @@ p <- plot_ly(data, x = ~x, y = ~y, z = ~z,
            yaxis = list(range = c(min(data$y), max(data$y))),
            zaxis = list(range = c(min(data$z), max(data$z))))
          )
-p
 
-# Other -------------------------------------------------------------------
+return(p)
 
-
-library(bio3d)
-dodecamer <- read.pdb('1BNA')
-str(dodecamer)
-dodecamer$atom
-
-atom.select(dodecamer, "backbone")
-
+}
